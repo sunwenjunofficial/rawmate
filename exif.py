@@ -52,6 +52,15 @@ class ImageMeta:
         return (self.capture_time, self.subsec or "")
 
     @property
+    def orientation_code(self) -> str:
+        """EXIF 方向 → Lightroom 内部的 orientation 代码。
+
+        实测对应：1→AB(横), 6→BC(顺时针90), 8→DA(逆时针90), 3→CD(倒置)。
+        写错这个值，竖拍照片在 LrC 里就会横过来。
+        """
+        return {1: "AB", 3: "CD", 6: "BC", 8: "DA"}.get(self.orientation or 1, "AB")
+
+    @property
     def iso_datetime(self) -> Optional[str]:
         """转成 LrC 目录里用的 "2026-11-12T09:06:49.888" 格式。"""
         if not self.capture_time:

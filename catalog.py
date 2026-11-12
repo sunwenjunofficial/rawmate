@@ -264,6 +264,9 @@ class CatalogWriter:
                     continue
                 meta = read_meta(path)
                 blob, dig = xmp.build_blob(meta, name)
+                # 竖拍照片：早期版本一律写成 AB，会在 LrC 里横过来
+                con.execute("update Adobe_images set orientation=? where id_local=? "
+                            "and orientation='AB'", (meta.orientation_code, image_id))
                 cur = con.execute(
                     "update Adobe_AdditionalMetadata set xmp=?, additionalInfoSet=1, "
                     "internalXmpDigest=?, lastSynchronizedHash=?, metadataVersion=4.0 "
@@ -426,7 +429,7 @@ class CatalogWriter:
             "sidecarStatus, touchCount, touchTime) "
             "values (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)",
             (_uuid(), aspect, 16, cap, 3, "", 32803, -63113817600, 0, "RAW",
-             h, w, "AB", 0, "z", file_id, 1, 0, 0)).lastrowid
+             h, w, meta.orientation_code, 0, "z", file_id, 1, 0, 0)).lastrowid
 
         blob, xmp_digest = xmp.build_blob(meta, f"{base}.{ext}")
 
